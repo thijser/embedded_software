@@ -5,7 +5,7 @@
 #include <std_msgs/String.h>
 
 
-                int power =40; 
+                int power =150; 
                 ros::NodeHandle  nh;
 		std_msgs::String str_msg;
 

@@ -86,7 +86,7 @@ GaussianBlur(out,out_gray,cv::Size(3,3),3,sigmaY,borderType );
 	uchar left_pixel =result.at<uchar>(0,0);
 	uchar middle_pixel =result.at<uchar>(0,1);
 	uchar right_pixel = result.at<uchar>(0,2);    
-	if(left_pixel == right_pixel)
+	if(middle_pixel > right_pixel && middle_pixel > left_pixel)
 	{
 		//rij rechtdoor	
 		twistmsg.linear.x=1;

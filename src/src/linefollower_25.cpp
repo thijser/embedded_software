@@ -45,37 +45,65 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	
 	cv::Mat pers_mat = getPerspectiveTransform(pts1,pts2);//generate the matrix to deal with these vectors
 	cv::warpPerspective(img, out, pers_mat, out.size());//apply to the image and make new image out
- //reduce noise 
-cv::Mat out_gray;
-double sigmaY=0;
-int borderType=0;
-GaussianBlur(out,out_gray,cv::Size(3,3),3,sigmaY,borderType );
-// for ( int i = 1; i < 4; i = i + 2 )
-//          medianBlur ( out, out_gray, i );
+
   	
-	//out is in kleur
-	/*
+	
 	//now we have a picture in the right allignment and cartesion perspective
 	//apply  filter 
+
+	 //reduce noise 
+	cv::Mat bleur;
+	double sigmaY=0;
+	int borderType=0;
+	GaussianBlur(out,bleur,cv::Size(3,3),3,sigmaY,borderType );
+
+		cv::imshow("pers",bleur);
+
 	cv::Mat out_gray;
-	
-	double threshold=100;//minimum grey value of line to be detected 0 is black 255 white
-	
-	cv::cvtColor(out, out_gray, cv::COLOR_BGR2GRAY);//convert to gray
-	cv::threshold(out_gray, out_gray, threshold,255,0);//filter out pixels that are not line and make other pixels white
-	*/
+	cv::cvtColor(bleur, out_gray, cv::COLOR_BGR2GRAY);//convert to gray
 
 	int cannythresh=30;
 	int cannyratio = 3;
 	int cannykernel_size =3;	
-	cv::Mat detected_edges;
-
-	cv::Canny(out_gray, detected_edges, cannythresh, cannythresh*cannyratio, cannykernel_size);//edge detection canny
+	vector<cv::Vec4i> detected_lines;
+	cv::HoughLinesP(out_gray, detected_lines, 1, CV_PI/180, 50, 50, 10 );
+//	cv::Canny(out_gray, detected_edges, cannythresh, cannythresh*cannyratio, cannykernel_size);//edge detection canny
+	 double longest_distance=0;
+	 cv::Vec4i longest_line;
+	  for(int i = 0; i < detected_lines.size(); i++ ){
 		
+		cv::Vec4f l = detected_lines[i];
+	cout<<(l)<<"\n";
+
+		double dist= (l[0]-l[2]*l[0]-l[2])+(l[1]-l[3]*l[1]-l[3]); 	
+		if(dist>longest_distance){
+			longest_distance=dist;
+			longest_line=l;
+		}
+	  }
+
+	double theta;
+	if(longest_line[1]-longest_line[3]==0){
+		theta=1;
+	}else{
+		if(longest_line[1]>longest_line[3]){
+			theta=(longest_line[0]-longest_line[2])/(longest_line[1]-longest_line[3]);
+ 	 	}else
+			theta=(longest_line[2]-longest_line[0])/(longest_line[3]-longest_line[1]);
+  	}
+	if(theta>1){
+		twistmsg.linear.x=1;
+		twistmsg.angular.z=1;
+		ROS_INFO("linksaf");
+	}else{
 	
-        cv::Rect r(4, 100, 64, 24);
+		twistmsg.linear.x=1;
+		twistmsg.angular.z=-1;
+		ROS_INFO("rechtsaf");
+	}
+/*        cv::Rect r(4, 100, 64, 24);
  	cv::Mat cropped = detected_edges(r);
-	cv::imshow("pers",cropped);
+	cv::imshow("pers",detected_edges);
 	cv::Mat result;
 
 
@@ -98,17 +126,17 @@ GaussianBlur(out,out_gray,cv::Size(3,3),3,sigmaY,borderType );
 	{
 		//rij naar links
 		twistmsg.linear.x=1;
-		twistmsg.angular.z=-1;
+		twistmsg.angular.z=1;
 		ROS_INFO("linksaf");
 	}
 	if(left_pixel > right_pixel) //recht is zwart
 	{
 		//rij naar rechts
 		twistmsg.linear.x=1;
-		twistmsg.angular.z=1;
+		twistmsg.angular.z=-1;
 		ROS_INFO("rechtsaf");
 	} 	
-	
+	*/
 
 }
 

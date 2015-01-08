@@ -5,8 +5,8 @@
 #include <opencv/cv.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
-
-
+#include <iostream>
+using namespace std;
 //	make sure to have the compressed transport installed by checking rosrun image_transport list_transports
 //	if not, install it with sudo apt-get install ros-indigo-compressed-image-transport
 //	(via rqt> plugins>visualization>image view and selectin the topic /camera/image/compressed, the pictures will be viewed)
@@ -26,8 +26,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
 	cv::Mat img = cv_bridge::toCvCopy(msg, "bgr8")->image;// picture now stored in img
 	
-	float scale = 0.75;//scale the picture
-	float ps = 0.24;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.2 and 0.3, higher values correct greater angles between phone and ground 
+	float scale = 0.1;//scale the picture
+	float ps = 0.35;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 
 	
 	cv::Point2f  pts1[4];
 	cv::Point2f  pts2[4]; 
@@ -45,21 +45,47 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	
 	cv::Mat pers_mat = getPerspectiveTransform(pts1,pts2);//generate the matrix to deal with these vectors
 	cv::warpPerspective(img, out, pers_mat, out.size());//apply to the image and make new image out
-	
+ //reduce noise 
+cv::Mat out_gray;
+double sigmaY=0;
+int borderType=0;
+GaussianBlur(out,out_gray,cv::Size(3,3),3,sigmaY,borderType );
+// for ( int i = 1; i < 4; i = i + 2 )
+//          medianBlur ( out, out_gray, i );
+  	
+	//out is in kleur
+	/*
 	//now we have a picture in the right allignment and cartesion perspective
 	//apply  filter 
 	cv::Mat out_gray;
 	
-	double threshold=70;//minimum grey value of line to be detected 0 is black 255 white
+	double threshold=100;//minimum grey value of line to be detected 0 is black 255 white
 	
 	cv::cvtColor(out, out_gray, cv::COLOR_BGR2GRAY);//convert to gray
 	cv::threshold(out_gray, out_gray, threshold,255,0);//filter out pixels that are not line and make other pixels white
-	cv::imshow("pers",out_gray);
+	*/
+
+	int cannythresh=30;
+	int cannyratio = 3;
+	int cannykernel_size =3;	
+	cv::Mat detected_edges;
+
+	cv::Canny(out_gray, detected_edges, cannythresh, cannythresh*cannyratio, cannykernel_size);//edge detection canny
+		
 	
+        cv::Rect r(4, 100, 64, 24);
+ 	cv::Mat cropped = detected_edges(r);
+	cv::imshow("pers",cropped);
 	cv::Mat result;
-	cv::resize(out_gray, result,cv::Size(2,1) ,0,0, cv::INTER_LINEAR);
+
+
+
+
+
+	cv::resize(cropped, result,cv::Size(3,1) ,0,0, cv::INTER_LINEAR);
 	uchar left_pixel =result.at<uchar>(0,0);
-	uchar right_pixel = result.at<uchar>(0,1);    
+	uchar middle_pixel =result.at<uchar>(0,1);
+	uchar right_pixel = result.at<uchar>(0,2);    
 	if(left_pixel == right_pixel)
 	{
 		//rij rechtdoor	
@@ -83,23 +109,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 		ROS_INFO("rechtsaf");
 	} 	
 	
-/*
-	int erosion_size = 10;	
-	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
-                       cv::Size( 3*erosion_size + 1, 3*erosion_size+1 ),
-                       cv::Point( erosion_size, erosion_size ) );	
-		
-	cv::erode(out_gray, out_gray, element); 	
-	
-	int cannythresh=20;
-	int cannyratio = 3;
-	int cannykernel_size =3;	
-	cv::Mat detected_edges;
-	cv::Canny(out_gray, detected_edges, cannythresh, cannythresh*cannyratio, cannykernel_size);//edge detection canny
-		
-	cv::imshow("out", detected_edges);//show copy of image on screen    	
-	//now if center of screen is not between edges detected, turn	
-*/	
+
 }
 
 int main(int argc, char **argv)

@@ -27,7 +27,6 @@
 #define LED 13
 
 #define basepower 100
-
 void driveCallback(const geometry_msgs::Twist &msg){
   resettimer();
            digitalWrite(LED,LOW);

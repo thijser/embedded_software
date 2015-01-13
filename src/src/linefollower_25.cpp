@@ -26,8 +26,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
 	cv::Mat img = cv_bridge::toCvCopy(msg, "bgr8")->image;// picture now stored in img
 	
-	float scale = 0.1;//scale the picture
-	float ps = 0.35;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 
+	float scale = 0.2;//scale the picture
+	float ps = 0.35;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 0.35 
 	
 	cv::Point2f  pts1[4];
 	cv::Point2f  pts2[4]; 
@@ -49,39 +49,47 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
   	
 	
 	//now we have a picture in the right allignment and cartesion perspective
-	//apply  filter 
+	
 
 	 //reduce noise 
-	cv::Mat bleur;
+	cv::Mat blur;
 	double sigmaY=0;
-	int borderType=0;
-	GaussianBlur(out,bleur,cv::Size(3,3),3,sigmaY,borderType );
+	int borderType=1;
+	GaussianBlur(out,blur,cv::Size(3,3),3,sigmaY,borderType );
 
-		cv::imshow("pers",bleur);
+	
+	
+	
+	cv::Mat detected_edges, linewindow;
 
-	cv::Mat out_gray;
-	cv::cvtColor(bleur, out_gray, cv::COLOR_BGR2GRAY);//convert to gray
-
-	int cannythresh=30;
-	int cannyratio = 3;
-	int cannykernel_size =3;	
+	cv::Canny(blur, detected_edges, 50, 200,3);//edge detection canny
+	int crop = 5;
+	cv::Rect roi(crop,crop,detected_edges.cols-2*crop, detected_edges.rows-2*crop);//crop
+	detected_edges = detected_edges(roi);//crop
+	
+	
+	cv::cvtColor(detected_edges, linewindow, CV_GRAY2BGR);//make window to display lines
+	
 	vector<cv::Vec4i> detected_lines;
-	cv::HoughLinesP(out_gray, detected_lines, 1, CV_PI/180, 50, 50, 10 );
-//	cv::Canny(out_gray, detected_edges, cannythresh, cannythresh*cannyratio, cannykernel_size);//edge detection canny
-	 double longest_distance=0;
-	 cv::Vec4i longest_line;
+	cv::HoughLinesP(detected_edges, detected_lines, 1, CV_PI/180, 30, 30, 30 );
+
+	
+	double longest_distance=0;
+	cv::Vec4i longest_line;
+	
 	  for(int i = 0; i < detected_lines.size(); i++ ){
 		
 		cv::Vec4f l = detected_lines[i];
-	cout<<(l)<<"\n";
+		cv::line(linewindow, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0,0,255), 3, CV_AA);		
+		cout<<(l)<<"\n";
 
-		double dist= (l[0]-l[2]*l[0]-l[2])+(l[1]-l[3]*l[1]-l[3]); 	
+		double dist= (l[0]-l[2])*(l[0]-l[2])+(l[1]-l[3])*(l[1]-l[3]); 	
 		if(dist>longest_distance){
 			longest_distance=dist;
 			longest_line=l;
 		}
 	  }
-
+	cv::imshow("pers",linewindow);
 	double theta;
 	if(longest_line[1]-longest_line[3]==0){
 		theta=1;
@@ -105,12 +113,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
  	cv::Mat cropped = detected_edges(r);
 	cv::imshow("pers",detected_edges);
 	cv::Mat result;
-
-
-
-
-
 	cv::resize(cropped, result,cv::Size(3,1) ,0,0, cv::INTER_LINEAR);
+
 	uchar left_pixel =result.at<uchar>(0,0);
 	uchar middle_pixel =result.at<uchar>(0,1);
 	uchar right_pixel = result.at<uchar>(0,2);    

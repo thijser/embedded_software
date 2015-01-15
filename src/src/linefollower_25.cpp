@@ -79,8 +79,24 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 			}
 		}
 	}
+
+
 	float alpha=alhas/tot;
 	printf("alpha= %f",alpha);
+	if(alpha < 0)//links is zwart
+	{
+		//rij naar links
+		twistmsg.linear.x=1;
+		twistmsg.angular.z=1;
+		ROS_INFO("linksaf");
+	}
+	if(alpha < 0) //recht is zwart
+	{
+		//rij naar rechts
+		twistmsg.linear.x=1;
+		twistmsg.angular.z=-1;
+		ROS_INFO("rechtsaf");
+	} 
 	
 /*	cv::Mor at detected_edges, linewindow;
 

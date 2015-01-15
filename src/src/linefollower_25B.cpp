@@ -29,7 +29,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv::Mat img = cv_bridge::toCvCopy(msg, "bgr8")->image;// picture now stored in img
 	
 	float scale = 0.1;//scale the picture
-	float ps = 0;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 0.35 
+	float ps = 0;//erspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 0.35 
 	
 	cv::Point2f  pts1[4];
 	cv::Point2f  pts2[4]; 
@@ -52,7 +52,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	
 	//now we have a picture in the right allignment and cartesion perspective
 	
-
 	 //reduce noise 
 	cv::Mat blur;
 	cv::Mat gray;
@@ -61,38 +60,48 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	GaussianBlur(out,blur,cv::Size(3,3),3,sigmaY,borderType );
 
 	cv::Mat detected_edges, linewindow;
-
+	//float scale2 = 0.1;
+	//cv::resize(detected_edges, detected_edges, cv::Size(), scale2, scale2, cv::INTER_LINEAR);
 	cv::Canny(blur, detected_edges, 50, 200,3);//edge detection canny
-	int crop = 5;
-	cv::Rect roi
-(crop,crop,detected_edges.cols-2*crop, detected_edges.rows-2*crop);//crop
+	/*int crop = 10;
+	cv::Rect roi(crop,crop,detected_edges.cols-2*crop, detected_edges.rows-2*crop);//crop
 	detected_edges = detected_edges(roi);//crop
-	
-	
+	*/
 
-	float scale2 = 0.1;
-//	cv::Mat mini=cv::Mat::zeros(scale*detected_edges.cols,scale*detected_edges.rows,detected_edges.type());
+printf("type %i\n", gray.type()); 
+
+	
+cv::imshow("pers",detected_edges);
+
+	//::Mat mini=cv::Mat::zeros(scale*detected_edges.cols,scale*detected_edges.rows,detected_edges.type());
 	float highest =0; 
 	float best= 0;
-	for(int i=0;i<0;i++){
+	
+	for(int i=0;i<detected_edges.rows;i++){
 		
-		float loc = detected_edges.at<uchar>(i,detected_edges.rows-4);
+		float loc = detected_edges.at<uchar>(i,detected_edges.cols-4);
 		if(loc>highest){
 			best=i;
 			highest=loc;
 		}
 	}
-
-	if((float)best/(float)detected_edges.cols>0.5){
-		twistmsg.linear.x=1;
+	printf("best: %f",highest);
+	if((float)best/(float)detected_edges.cols>0.7){
+		twistmsg.linear.x=0;
 		twistmsg.angular.z=1;
 		ROS_INFO("linksaf");
 	}else{
-	
+		if((float)best/(float)detected_edges.cols>0.4){
 		twistmsg.linear.x=1;
+		twistmsg.angular.z=0;
+		ROS_INFO("rechtdoor");
+		
+		}else{
+		twistmsg.linear.x=0;
 		twistmsg.angular.z=-1;
 		ROS_INFO("rechtsaf");
 	}
+}
 /*        cv::Rect r(4, 100, 64, 24);
  	cv::Mat cropped = detected_edges(r);
 	cv::imshow("pers",detected_edges);

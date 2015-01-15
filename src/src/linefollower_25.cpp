@@ -25,11 +25,10 @@ geometry_msgs::Twist twistmsg;//
 
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {	
-	ROS_INFO("yhea?");
 	cv::Mat img = cv_bridge::toCvCopy(msg, "bgr8")->image;// picture now stored in img
 	
-	float scale = 0.1;//scale the picture
-	float ps = 0.35;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 0.35 
+	float scale = 0.5;//scale the picture
+	float ps = 0.0;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 0.35 
 	
 	cv::Point2f  pts1[4];
 	cv::Point2f  pts2[4]; 
@@ -90,7 +89,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 		twistmsg.angular.z=1;
 		ROS_INFO("linksaf");
 	}
-	if(alpha < 0) //recht is zwart
+	if(alpha > 0) //recht is zwart
 	{
 		//rij naar rechts
 		twistmsg.linear.x=1;

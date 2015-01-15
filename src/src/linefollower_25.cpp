@@ -24,10 +24,11 @@ geometry_msgs::Twist twistmsg;//
 
 
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
-{	ROS_INFO("yhea?");
-/*	cv::Mat img = cv_bridge::toCvCopy(msg, "bgr8")->image;// picture now stored in img
+{	
+	ROS_INFO("yhea?");
+	cv::Mat img = cv_bridge::toCvCopy(msg, "bgr8")->image;// picture now stored in img
 	
-	float scale = 0.2;//scale the picture
+	float scale = 0.1;//scale the picture
 	float ps = 0.35;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 0.35 
 	
 	cv::Point2f  pts1[4];
@@ -59,7 +60,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	int borderType=1;
 	GaussianBlur(out,blur,cv::Size(3,3),3,sigmaY,borderType );
 	cvtColor(blur,gray,CV_BGR2GRAY);
-	cv::normalize(gray, gray, 0, 255, 1, CV_8UC1);
+	cv::imshow("pers",gray);
+	//cv::normalize(gray, gray, 0, 255, 1, CV_8UC1);
 	double tot=0;
 	double alhas=0;
 	for(int i=0;i<blur.rows-1;i++){
@@ -70,8 +72,11 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 			float str= abs(loc)+abs(hor);
 			float hD=hor-loc; //horizontal change 
 			float vD=vert-loc;//vertical change
-			 alhas=alhas+(atan(hD/vD))*str;
-			tot=tot+str;
+			if(vD!= 0)
+			{
+				 alhas=alhas+(atan(hD/vD))*str;
+				tot=tot+str;
+			}
 		}
 	}
 	float alpha=alhas/tot;

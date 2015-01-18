@@ -174,7 +174,3 @@ target_link_libraries(linefollower_25 ${OpenCV_LIBRARIES})
 add_executable(linefollower_25B src/linefollower_25B.cpp)
 target_link_libraries(linefollower_25B ${catkin_LIBRARIES})
 target_link_libraries(linefollower_25B ${OpenCV_LIBRARIES})
-
-add_executable(listener src/listener.cpp)
-target_link_libraries(listener ${catkin_LIBRARIES})
-

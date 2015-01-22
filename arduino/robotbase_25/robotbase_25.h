@@ -1,3 +1,11 @@
+/** 
+ * Group number: 25 
+ * Student 1: 
+ * Thijs Boumans, 4214854
+ * Student 2: 
+ * Stephan Neevel, 4232623
+*/
+
 #include <ros.h>
 #include <ros/time.h>
 #include <sensor_msgs/Range.h>

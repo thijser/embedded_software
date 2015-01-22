@@ -29,51 +29,9 @@ void driveCallback(const geometry_msgs::Twist &msg){
            
   float x = msg.linear.x;
   float z = msg.angular.z;
-  if(x==0){
-      if(z>0){
-        rightTrack=1*z;
-        leftTrack=-1*z;
-        return;
-      }
-
-        if(z<0){
-          rightTrack=-1*z;
-          leftTrack=1*z;
-          return;
-      }
-       if(z==0){
-            rightTrack=0;
-            leftTrack=0;
-            return;
-        }
-    }  
-     if(z<0){
-        if(x>0){
-                rightTrack=0;
-                leftTrack=1*z*x;
-        }else{
-                rightTrack=-1*x*z;
-                leftTrack=0;
-        }
-     }
-     if(z>0){
-        if(x>0){
-                rightTrack=1*x*z;
-                leftTrack=0;
-        }else{
-                rightTrack=0;
-                leftTrack=-1*x*z;
-        }
-     }
-     
-     if(z==0){
-       if(x>0){
-         rightTrack=1*x;
-         leftTrack=1*x;
-       }else{
-         rightTrack=-1*x;
-         leftTrack=-1*x;
-       }
+  {
+      leftTrack=x-z;
+      rightTrack=x+z;
       }
      
 Serial.println("4");

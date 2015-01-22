@@ -17,8 +17,8 @@
 		sensor_msgs::Range range_msg;
 		char frameid[13] = "/ultrasound";
 
-		 int rightTrack=1;
-		 int leftTrack=1;
+		 float rightTrack=1;
+		 float leftTrack=1;
 		void driveCallback(const geometry_msgs::Twist &msg);
                 ros::Subscriber<geometry_msgs::Twist> sub ("/cmd_vel",&driveCallback);
 

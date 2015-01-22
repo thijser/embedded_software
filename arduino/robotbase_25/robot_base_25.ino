@@ -9,7 +9,7 @@
 #include <ros/time.h>
 #include <sensor_msgs/Range.h>
 #include <geometry_msgs/Twist.h>
-#include "HelloWorld.h"
+#include "robotbase_25.h"
 #define sensNumber 1
 #define trigPin 23
 #define echoPin 22
@@ -22,59 +22,16 @@
 #define EN2 25 
 #define FWD2 2 
 #define fuel 1
-#define basepower 20
-
+#define basepower 55
 
 void driveCallback(const geometry_msgs::Twist &msg){
   resettimer();
            
   float x = msg.linear.x;
   float z = msg.angular.z;
-  if(x==0){
-      if(z>0){
-        rightTrack=1;
-        leftTrack=-1;
-        return;
-      }
-
-        if(z<0){
-          rightTrack=-1;
-          leftTrack=1;
-          return;
-      }
-       if(z==0){
-            rightTrack=0;
-            leftTrack=0;
-            return;
-        }
-    }  
-     if(z<0){
-        if(x>0){
-                rightTrack=0;
-                leftTrack=1;
-        }else{
-                rightTrack=-1;
-                leftTrack=0;
-        }
-     }
-     if(z>0){
-        if(x>0){
-                rightTrack=1;
-                leftTrack=0;
-        }else{
-                rightTrack=0;
-                leftTrack=-1;
-        }
-     }
-     
-     if(z==0){
-       if(x>0){
-         rightTrack=1;
-         leftTrack=1;
-       }else{
-         rightTrack=-1;
-         leftTrack=-1;
-       }
+  {
+      leftTrack=x-z;
+      rightTrack=x+z;
       }
      
 Serial.println("4");
@@ -85,31 +42,32 @@ void drive(){
   if(fuel){
 
     
-    if(rightTrack==1){
+    if(rightTrack>0.1){
       digitalWrite(REV2,LOW);
-      analogWrite(FWD2,power);
+      analogWrite(FWD2,power*rightTrack);
       digitalWrite(EN2,HIGH);
 
     }
-    if(leftTrack==1){
+    if(leftTrack>0.1){
       digitalWrite(REV1,LOW);
-      analogWrite(FWD1,power);
+      analogWrite(FWD1,power*leftTrack);
       digitalWrite(EN1,HIGH);
     }
-    if(rightTrack==-1){
+    if(rightTrack<-0.1){
        digitalWrite(FWD2,LOW);
-      analogWrite(REV2,power);
+      analogWrite(REV2,power*rightTrack);
       digitalWrite(EN2,HIGH);
     }
-     if(leftTrack==-1){
+     if(leftTrack<-0.1){
         digitalWrite(FWD1,LOW);
-        analogWrite(REV1,power);
+        analogWrite(REV1,power*leftTrack);
         digitalWrite(EN1,HIGH);
     }
-    if(rightTrack==0){
+    if(rightTrack>-0.1&&rightTrack<0.1){
       digitalWrite(EN2,LOW);
     }
-    if(leftTrack==0){
+    
+    if(leftTrack>-0.1&&leftTrack<0.1){
       digitalWrite(EN1,LOW);
     }
 }
@@ -173,14 +131,17 @@ void loop()
     range_time =  millis() + 50;
     range_msg.field_of_view = trigPin; 
     range_msg.min_range = echoPin;
-   power=1+-1/(range_msg.range/30)*basepower;
+    power=basepower;
+    if(range_msg.range>90){
+      power=(1-((range_msg.range-30)/60))*basepower;
+    }
+     
    if(range_msg.range<30){
      power=0;
    }
     
     drive();
-
-   
+  
     range_msg.field_of_view=rightTrack;
     range_msg.min_range=leftTrack;
     nh.spinOnce();

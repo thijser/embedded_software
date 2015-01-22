@@ -167,9 +167,9 @@ include_directories(
  find_package(OpenCV)
    include_directories(${OpenCV_INCLUDE_DIRS})
    
-add_executable(linefollower_25 src/linefollower_25.cpp)
-target_link_libraries(linefollower_25 ${catkin_LIBRARIES})
-target_link_libraries(linefollower_25 ${OpenCV_LIBRARIES})
+#add_executable(linefollower_25 src/linefollower_25.cpp)
+#target_link_libraries(linefollower_25 ${catkin_LIBRARIES})
+#target_link_libraries(linefollower_25 ${OpenCV_LIBRARIES})
 
 add_executable(linefollower_25B src/linefollower_25B.cpp)
 target_link_libraries(linefollower_25B ${catkin_LIBRARIES})

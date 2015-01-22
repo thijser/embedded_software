@@ -5,7 +5,7 @@
 #include <std_msgs/String.h>
 
 
-                int power =150; 
+                int power =20; 
                 class NewHardware : public ArduinoHardware {
                   public: NewHardware(): ArduinoHardware(&Serial1,57600){};
                 }; ros::NodeHandle_<NewHardware> nh;
@@ -21,5 +21,6 @@
 		 int leftTrack=1;
 		void driveCallback(const geometry_msgs::Twist &msg);
                 ros::Subscriber<geometry_msgs::Twist> sub ("/cmd_vel",&driveCallback);
+
 
 

@@ -31,7 +31,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	float scale = 0.1;//scale the picture
 	float ps = 0;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 0.35 
 	
-	cv::Point2f  pts1[4];
+	cv::Point2f  pts1[4];ui
 	cv::Point2f  pts2[4]; 
 	//setting up vector for warping, scaling and turning
 	pts1[0]=cv::Point2f((float)(0),(float)((1-ps)*img.rows));
@@ -61,6 +61,26 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	GaussianBlur(out,blur,cv::Size(3,3),3,sigmaY,borderType );
 
 	cv::Mat detected_edges, linewindow;
+
+	float alpha=alhas/tot;
+	printf("alpha= %f",alpha);
+	if(alpha < 0)//links is zwart
+	{
+		//rij naar links
+		twistmsg.linear.x=1;
+		twistmsg.angular.z=1;
+		ROS_INFO("linksaf");
+	}
+	if(alpha > 0) //recht is zwart
+	{
+		//rij naar rechts
+		twistmsg.linear.x=1;
+		twistmsg.angular.z=-1;
+		ROS_INFO("rechtsaf");
+	} 
+	
+/*	cv::Mor at detected_edges, linewindow;
+>>>>>>> a4884b66dad3d091482f1441e025e8f4e9bee340
 
 	cv::Canny(blur, detected_edges, 50, 200,3);//edge detection canny
 	int crop = 5;

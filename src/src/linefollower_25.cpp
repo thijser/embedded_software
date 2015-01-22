@@ -25,11 +25,11 @@ geometry_msgs::Twist twistmsg;//
 
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {	
-	ROS_INFO("yhea?");
+
 	cv::Mat img = cv_bridge::toCvCopy(msg, "bgr8")->image;// picture now stored in img
 	
 	float scale = 0.1;//scale the picture
-	float ps = 0.35;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 0.35 
+	float ps = 0;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 0.35 
 	
 	cv::Point2f  pts1[4];
 	cv::Point2f  pts2[4]; 
@@ -59,85 +59,30 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	double sigmaY=0;
 	int borderType=1;
 	GaussianBlur(out,blur,cv::Size(3,3),3,sigmaY,borderType );
-	cvtColor(blur,gray,CV_BGR2GRAY);
-	cv::imshow("pers",gray);
-	//cv::normalize(gray, gray, 0, 255, 1, CV_8UC1);
-	double tot=0;
-	double alhas=0;
-	for(int i=0;i<blur.rows-1;i++){
-		for(int j=0;j<blur.cols-1;j++){
-			float loc=gray.at<uchar>(j,i);
-			float hor=gray.at<uchar>(j+1,i);
-			float vert=gray.at<uchar>(j,i+1);
-			float str= abs(loc)+abs(hor);
-			float hD=hor-loc; //horizontal change 
-			float vD=vert-loc;//vertical change
-			if(vD!= 0)
-			{
-				 alhas=alhas+(atan(hD/vD))*str;
-				tot=tot+str;
-			}
-		}
-	}
 
-
-	float alpha=alhas/tot;
-	printf("alpha= %f",alpha);
-	if(alpha < 0)//links is zwart
-	{
-		//rij naar links
-		twistmsg.linear.x=1;
-		twistmsg.angular.z=1;
-		ROS_INFO("linksaf");
-	}
-	if(alpha < 0) //recht is zwart
-	{
-		//rij naar rechts
-		twistmsg.linear.x=1;
-		twistmsg.angular.z=-1;
-		ROS_INFO("rechtsaf");
-	} 
-	
-/*	cv::Mor at detected_edges, linewindow;
+	cv::Mat detected_edges, linewindow;
 
 	cv::Canny(blur, detected_edges, 50, 200,3);//edge detection canny
 	int crop = 5;
-	cv::Rect roi(crop,crop,detected_edges.cols-2*crop, detected_edges.rows-2*crop);//crop
+	cv::Rect roi
+(crop,crop,detected_edges.cols-2*crop, detected_edges.rows-2*crop);//crop
 	detected_edges = detected_edges(roi);//crop
 	
 	
-	cv::cvtColor(detected_edges, linewindow, CV_GRAY2BGR);//make window to display lines
-	
-	vector<cv::Vec4i> detected_lines;
-	cv::HoughLinesP(detected_edges, detected_lines, 1, CV_PI/180, 30, 30, 30 );
-
-	
-	double longest_distance=0;
-	cv::Vec4i longest_line;
-	
-	  for(int i = 0; i < detected_lines.size(); i++ ){
+	cv::mini=cv::Mat out=cv::Mat::zeros(scale*detected_edges.cols,scale*detected_edges.rows, detected_edges.type());
+	resize(detected_edges, dst, dst.size(), 0, 0,	
+	float highest =0; 
+	float best= 0;
+	for(int i=0;i<0;i++){
 		
-		cv::Vec4f l = detected_lines[i];
-		cv::line(linewindow, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0,0,255), 3, CV_AA);		
-		cout<<(l)<<"\n";
-
-		double dist= (l[0]-l[2])*(l[0]-l[2])+(l[1]-l[3])*(l[1]-l[3]); 	
-		if(dist>longest_distance){
-			longest_distance=dist;
-			longest_line=l;
+		float loc = detected_edges.at<uchar>(i,detected_edges.rows-4);
+		if(loc>highest){
+			best=i;
+			highest=loc;
 		}
-	  }
-	cv::imshow("pers",linewindow);
-	double theta;
-	if(longest_line[1]-longest_line[3]==0){
-		theta=1;
-	}else{
-		if(longest_line[1]>longest_line[3]){
-			theta=(longest_line[0]-longest_line[2])/(longest_line[1]-longest_line[3]);
- 	 	}else
-			theta=(longest_line[2]-longest_line[0])/(longest_line[3]-longest_line[1]);
-  	}
-	if(theta>1){
+	}
+
+	if((float)best/(float)detected_edges.cols>0.5){
 		twistmsg.linear.x=1;
 		twistmsg.angular.z=1;
 		ROS_INFO("linksaf");
@@ -184,7 +129,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 
 int main(int argc, char **argv)
 {
-
+	printf("here<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 	ros::init(argc, argv, "linefollower_25");//initialise
 	ros::NodeHandle n; //nodehandle
 	ros::Publisher chatter_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 10); //publish geometry_msgs::Twist on topic /cmd_vel with buffer of 10 messages

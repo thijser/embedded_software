@@ -31,7 +31,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	float scale = 0.1;//scale the picture
 	float ps = 0;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 0.35 
 	
-	cv::Point2f  pts1[4];ui
+	cv::Point2f  pts1[4];
 	cv::Point2f  pts2[4]; 
 	//setting up vector for warping, scaling and turning
 	pts1[0]=cv::Point2f((float)(0),(float)((1-ps)*img.rows));
@@ -60,27 +60,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	int borderType=1;
 	GaussianBlur(out,blur,cv::Size(3,3),3,sigmaY,borderType );
 
-	cv::Mat detected_edges, linewindow;
-
-	float alpha=alhas/tot;
-	printf("alpha= %f",alpha);
-	if(alpha < 0)//links is zwart
-	{
-		//rij naar links
-		twistmsg.linear.x=1;
-		twistmsg.angular.z=1;
-		ROS_INFO("linksaf");
-	}
-	if(alpha > 0) //recht is zwart
-	{
-		//rij naar rechts
-		twistmsg.linear.x=1;
-		twistmsg.angular.z=-1;
-		ROS_INFO("rechtsaf");
-	} 
-	
-/*	cv::Mor at detected_edges, linewindow;
->>>>>>> a4884b66dad3d091482f1441e025e8f4e9bee340
 
 	cv::Canny(blur, detected_edges, 50, 200,3);//edge detection canny
 	int crop = 5;
@@ -88,31 +67,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 (crop,crop,detected_edges.cols-2*crop, detected_edges.rows-2*crop);//crop
 	detected_edges = detected_edges(roi);//crop
 	
-	
-	cv::mini=cv::Mat out=cv::Mat::zeros(scale*detected_edges.cols,scale*detected_edges.rows, detected_edges.type());
-	resize(detected_edges, dst, dst.size(), 0, 0,	
-	float highest =0; 
-	float best= 0;
-	for(int i=0;i<0;i++){
-		
-		float loc = detected_edges.at<uchar>(i,detected_edges.rows-4);
-		if(loc>highest){
-			best=i;
-			highest=loc;
-		}
-	}
-
-	if((float)best/(float)detected_edges.cols>0.5){
-		twistmsg.linear.x=1;
-		twistmsg.angular.z=1;
-		ROS_INFO("linksaf");
-	}else{
-	
-		twistmsg.linear.x=1;
-		twistmsg.angular.z=-1;
-		ROS_INFO("rechtsaf");
-	}
-/*        cv::Rect r(4, 100, 64, 24);
+      cv::Rect r(4, 100, 64, 24);
  	cv::Mat cropped = detected_edges(r);
 	cv::imshow("pers",detected_edges);
 	cv::Mat result;
@@ -143,7 +98,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 		twistmsg.angular.z=-1;
 		ROS_INFO("rechtsaf");
 	} 	
-	*/
+	
 
 }
 

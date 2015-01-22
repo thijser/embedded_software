@@ -180,7 +180,7 @@ void loop()
      
    if(range_msg.range<30){
      power=0;
-   }/*/
+   }
     
     drive();
   

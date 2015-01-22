@@ -1,8 +1,15 @@
+/** 
+ * Group number: 25 
+ * Student 1: 
+ * Thijs Boumans, 4214854
+ * Student 2: 
+ * Stephan Neevel, 4232623
+*/
+
 /*	
-	Group 25
-	Stephan Neevel and Thijs Boumans
-	This code gets a picture stream from a camera and detects a line in the picture. A gray-scale picture will be viewed on screen. On basis of where this line is (to the left of the center, in the middle or to the right of the center), the code posts a geometry_msgs::Twist on the topic cmd_vel, with a turning velocity and a linear velocity. 
-	RUN with $rosrun line_detection linefollower_25 _image_transport:=compressed
+This code gets a picture stream from a camera and detects a line in the picture. A gray-scale picture will be viewed on screen. On basis of where this line is (to the left of the center, in the middle or to the right of the center), the code posts a geometry_msgs::Twist on the topic cmd_vel, with a turning velocity and a linear velocity. 
+
+RUN with $rosrun line_detection linefollower_25 _image_transport:=compressed
 */
 #include "ros/ros.h"
 #include <geometry_msgs/Twist.h>

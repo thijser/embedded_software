@@ -1,3 +1,9 @@
+/*	
+	Group 25
+	Stephan Neevel and Thijs Boumans
+	This code gets a picture stream from a camera and detects a line in the picture. A gray-scale picture will be viewed on screen. On basis of where this line is (to the left of the center, in the middle or to the right of the center), the code posts a geometry_msgs::Twist on the topic cmd_vel, with a turning velocity and a linear velocity. 
+	RUN with $rosrun line_detection linefollower_25 _image_transport:=compressed
+*/
 #include "ros/ros.h"
 #include <geometry_msgs/Twist.h>
 #include <image_transport/image_transport.h>
@@ -6,107 +12,57 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <iostream>
-using namespace std;
-//	make sure to have the compressed transport installed by checking rosrun image_transport list_transports
-//	if not, install it with sudo apt-get install ros-indigo-compressed-image-transport
-//	(via rqt> plugins>visualization>image view and selectin the topic /camera/image/compressed, the pictures will be viewed)
 
-//	look up ip via /sbin/ifconfig | less (inet adrr:)
-//	$ export ROS_IP=<inetaddr>
-//	$ export ROS_MASTER_URI=http://$ROS_IP:11311/	 
-//	run roscore
-//	set URI on phone to http://<inetaddr>:11311/ and press connect
-//	new terminal $source devel/setup.bash
-//	RUN with $rosrun line_detection linefollower_25 _image_transport:=compressed
-
-geometry_msgs::Twist twistmsg;//
-
+geometry_msgs::Twist twistmsg;//the message to be published
 
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
-	cv::Mat img = cv_bridge::toCvCopy(msg, "bgr8")->image;// picture now stored in img
+	cv::Mat img = cv_bridge::toCvCopy(msg, "bgr8")->image;// picture now imported and stored in img
 	
-	float scale = 0.1;//scale the picture
-	float ps = 0.0;//perspective scaler TWEAK THIS TO MATCH ROBOT SETUP, value probably between 0.3 and 0.4, higher values correct greater angles between phone and ground 
-	
-	cv::Point2f  pts1[4];
+	float scale = 0.1;//scaler
+	float ps = 0.0;//perspective scaler, to be tweaked to match phone angle in the robot, value probably between 0.3 and 0.4 when the robot is inserted in the robot, higher values correct greater angles between phone and ground. During the test, the phone was taped parallel to the ground, so the value of this scaler was zero. 
+	cv::Point2f  pts1[4];//setting up vector for warping, scaling and turning the picture
 	cv::Point2f  pts2[4]; 
-	//setting up vector for warping, scaling and turning
 	pts1[0]=cv::Point2f((float)(0),(float)((1-ps)*img.rows));
 	pts1[1]=cv::Point2f((float)(0),(float)(ps*img.rows));
 	pts1[2]=cv::Point2f((float)(img.cols),(float)(img.rows));
 	pts1[3]=cv::Point2f((float)(img.cols),(float)(0));
-
-	cv::Mat out=cv::Mat::zeros(scale*img.cols,scale*img.rows, img.type());
+	cv::Mat out=cv::Mat::zeros(scale*img.cols,scale*img.rows, img.type());//define new matrix for warped picture
 	pts2[0]=cv::Point2f((float)(0),(float)(0));
 	pts2[1]=cv::Point2f((float)(out.cols),(float)(0));
 	pts2[2]=cv::Point2f((float)(0),(float)(out.rows));
 	pts2[3]=cv::Point2f((float)(out.cols),(float)(out.rows));
-	
 	cv::Mat pers_mat = getPerspectiveTransform(pts1,pts2);//generate the matrix to deal with these vectors
-	cv::warpPerspective(img, out, pers_mat, out.size());//apply to the image and make new image out
- //reduce noise 
-
-double sigmaY=0;
-int borderType=0;
-	//apply  filter 
-	cv::Mat out_gray;
-	
-	double threshold=100;//minimum grey value of line to be detected 0 is black 255 white
-	
+	cv::warpPerspective(img, out, pers_mat, out.size());//apply to the image and make new image out, now the picture is in the right allignment and is parallel 
+ 
+	cv::Mat out_gray;//define matrix for a gray-scale picture
+	int gray_threshold= 100;//minimum grey value of line to be detected; 0 is black 255 white
 	cv::cvtColor(out, out_gray, cv::COLOR_BGR2GRAY);//convert to gray
-	cv::threshold(out_gray, out_gray, threshold,255,0);//filter out pixels that are not line and make other pixels white
-
-
-	/*int cannythresh=30;
-	int cannyratio = 3;
-	int cannykernel_size =3;	
-	cv::Mat detected_edges;
-
-	cv::Canny(out_gray, detected_edges, cannythresh, cannythresh*cannyratio, cannykernel_size);//edge detection canny
-		
 	
-        cv::Rect r(4, 100, 64, 24);
- 	cv::Mat cropped = detected_edges(r);
-	
-	
-
-*/
-cv::imshow("pers",out_gray);
-cv::Mat result;
-
-
-
-
-
-	cv::resize(out_gray, result,cv::Size(3,1) ,0,0, cv::INTER_LINEAR);
-	uchar left_pixel =result.at<uchar>(0,0);
-	uchar middle_pixel =result.at<uchar>(0,1);
-	uchar right_pixel = result.at<uchar>(0,2);    
+	cv::threshold(out_gray, out_gray, gray_threshold,255,0);//when pixels are whiter (higher value) than gray_threshold, these pixels are filtered out. Other pixels, that is the line (and some noise), will be turned black.
+	cv::imshow("image",out_gray);//show this picture
+	cv::resize(out_gray, out_gray,cv::Size(3,1) ,0,0, cv::INTER_LINEAR);//resize the picture down to 1 by 3 pixels, while interpolating. 
+	uchar left_pixel =out_gray.at<uchar>(0,0);//get the pixel value (black value) of the left pixel
+	uchar middle_pixel =out_gray.at<uchar>(0,1);
+	uchar right_pixel = out_gray.at<uchar>(0,2);    
 	if(middle_pixel > right_pixel && middle_pixel > left_pixel)
 	{
-		//rij rechtdoor	
 		twistmsg.linear.x=1;
-		ROS_INFO("rechtdoor");		
+		ROS_INFO("go straight");		
 	}
-	
-
-	if(left_pixel < right_pixel)//links is zwart
+	if(left_pixel < right_pixel)//left pixel is black
 	{
-		//rij naar links
+		
 		twistmsg.linear.x=1;
 		twistmsg.angular.z=1;
-		ROS_INFO("linksaf");
+		ROS_INFO("go left");
 	}
-	if(left_pixel > right_pixel) //recht is zwart
+	if(left_pixel > right_pixel) //recht pixel is black
 	{
-		//rij naar rechts
 		twistmsg.linear.x=1;
 		twistmsg.angular.z=-1;
-		ROS_INFO("rechtsaf");
+		ROS_INFO("go right");
 	} 	
-	
-
 }
 
 int main(int argc, char **argv)
@@ -116,25 +72,19 @@ int main(int argc, char **argv)
 	ros::Publisher chatter_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 10); //publish geometry_msgs::Twist on topic /cmd_vel with buffer of 10 messages
 	ros::Rate loop_rate(10);//the loop rate at which the program loops
 	
-	//setting sub for image transport
-	image_transport::ImageTransport it(n);
-	image_transport::Subscriber sub = it.subscribe("/camera/image",1, imageCallback);
+	image_transport::ImageTransport it(n);//image transports own nodehandle 
+	image_transport::Subscriber sub = it.subscribe("/camera/image",1, imageCallback);//setting subscriber for image transport
 	
-	
-	
-	cv::namedWindow("pers");
-	cv::startWindowThread();
+	cv::namedWindow("image");//set up window to show picture
+	cv::startWindowThread();//start window
 	
 	while (ros::ok())
 	{
-		
-		//code for message	    	
-		chatter_pub.publish(twistmsg);//finally publish the message
+		chatter_pub.publish(twistmsg);//publish the Twist message
 		ros::spinOnce();
 		loop_rate.sleep();    
   	}
-	
-	cv::destroyWindow("pers");
-  return 0;
+	cv::destroyWindow("image"); //when ros is not ok, (ctrl-c) the window closes
+return 0;
 }
 

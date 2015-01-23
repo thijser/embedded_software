@@ -43,9 +43,9 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv::warpPerspective(img, out, pers_mat, out.size());//apply to the image and make new image out, now the picture is in the right allignment and is parallel 
  
 	cv::Mat out_gray;//define matrix for a gray-scale picture
-	int gray_threshold= 100;//minimum grey value of line to be detected; 0 is black 255 white
 	cv::cvtColor(out, out_gray, cv::COLOR_BGR2GRAY);//convert to gray
 	
+	int gray_threshold= 100;//minimum grey value of line to be detected; 0 is black 255 white
 	cv::threshold(out_gray, out_gray, gray_threshold,255,0);//when pixels are whiter (higher value) than gray_threshold, these pixels are filtered out. Other pixels, that is the line (and some noise), will be turned black.
 	cv::imshow("image",out_gray);//show this picture
 	cv::resize(out_gray, out_gray,cv::Size(3,1) ,0,0, cv::INTER_LINEAR);//resize the picture down to 1 by 3 pixels, while interpolating. 

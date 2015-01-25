@@ -7,10 +7,11 @@
 */
 
 /*	
-This code gets a picture stream from a camera and detects a line in the picture. A gray-scale picture will be viewed on screen. On basis of where this line is (to the left of the center, in the middle or to the right of the center), the code posts a geometry_msgs::Twist on the topic cmd_vel, with a turning velocity and a linear velocity. 
+This code gets a picture stream from a camera and detects a line in the picture. A gray-scale picture will be viewed on screen. On basis of where this line is (to the left of the center, in the middle or to the right of the center), the code posts a geometry_msgs::Twist on the topic cmd_vel, with an angular velocity and a linear velocity. 
 
 RUN with $rosrun line_detection linefollower_25 _image_transport:=compressed
 */
+
 #include "ros/ros.h"
 #include <geometry_msgs/Twist.h>
 #include <image_transport/image_transport.h>
@@ -27,7 +28,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv::Mat img = cv_bridge::toCvCopy(msg, "bgr8")->image;// picture now imported and stored in img
 	
 	float scale = 0.1;//scaler
-	float ps = 0.0;//perspective scaler, to be tweaked to match phone angle in the robot, value probably between 0.3 and 0.4 when the robot is inserted in the robot, higher values correct greater angles between phone and ground. During the test, the phone was taped parallel to the ground, so the value of this scaler was zero. 
+	float ps = 0.0;//perspective scaler, to be tweaked to match phone angle in the robot, value probably between 0.3 and 0.4 when the smartphone is inserted in the robot, higher values correct greater angles between phone and ground. During the test, the phone was taped parallel to the ground, so the value of this scaler was zero. 
 	cv::Point2f  pts1[4];//setting up vector for warping, scaling and turning the picture
 	cv::Point2f  pts2[4]; 
 	pts1[0]=cv::Point2f((float)(0),(float)((1-ps)*img.rows));
@@ -64,7 +65,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 		twistmsg.angular.z=1;
 		ROS_INFO("go left");
 	}
-	if(left_pixel > right_pixel) //recht pixel is black
+	if(left_pixel > right_pixel) //right pixel is black
 	{
 		twistmsg.linear.x=1;
 		twistmsg.angular.z=-1;
@@ -91,7 +92,7 @@ int main(int argc, char **argv)
 		ros::spinOnce();
 		loop_rate.sleep();    
   	}
-	cv::destroyWindow("image"); //when ros is not ok, (ctrl-c) the window closes
+	cv::destroyWindow("image"); //when ros is not ok, (like ctrl-c the program) the window closes
 return 0;
 }
 
